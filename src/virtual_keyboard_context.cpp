@@ -1,52 +1,82 @@
 #include "virtual_keyboard_context.h"
+#include "virtual_keyboard_input_context.h"
+#include "virtual_keyboard_input_panel.h"
 #include <QRectF>
 #include <QLocale>
 #include <QGuiApplication>
 #include <QApplication>
 #include <QDebug>
 
-VirtualKeyboardInputContext::VirtualKeyboardInputContext()
-    : m_inputPanel(nullptr)
+static VkPlatformInputContext* gPlatformInputContext = nullptr;
+
+VkPlatformInputContext* VkPlatformInputContext::instance()
+{
+    if (gPlatformInputContext == nullptr)
+    {
+        VkPlatformInputContext::create();
+    }
+    return gPlatformInputContext;
+}
+
+VkPlatformInputContext* VkPlatformInputContext::create()
+{
+    if (gPlatformInputContext == nullptr)
+    {
+        gPlatformInputContext = new VkPlatformInputContext();
+    }
+    return gPlatformInputContext;
+}
+
+void VkPlatformInputContext::destory()
+{
+    if (gPlatformInputContext != nullptr)
+    {
+        gPlatformInputContext->deleteLater();
+        gPlatformInputContext = nullptr;
+    }
+}
+
+VkPlatformInputContext::VkPlatformInputContext()
+    : m_inputContext(nullptr)
+    , m_inputPanel(nullptr)
 {}
 
-VirtualKeyboardInputContext::~VirtualKeyboardInputContext()
+VkPlatformInputContext::~VkPlatformInputContext()
 {
-    hideInputPanel();
     if (m_inputPanel)
     {
         m_inputPanel->deleteLater();
     }
 }
 
-bool VirtualKeyboardInputContext::isValid() const
+bool VkPlatformInputContext::isValid() const
 {
     return true;
 }
 
-bool VirtualKeyboardInputContext::hasCapability(
-    Capability capability
-) const
+bool VkPlatformInputContext::hasCapability(
+    Capability capability) const
 {
     return QPlatformInputContext::hasCapability(capability);
 }
 
-void VirtualKeyboardInputContext::reset()
+void VkPlatformInputContext::reset()
 {
     QPlatformInputContext::reset();
 }
 
-void VirtualKeyboardInputContext::commit()
+void VkPlatformInputContext::commit()
 {
     QPlatformInputContext::commit();
 }
 
-void VirtualKeyboardInputContext::update(
+void VkPlatformInputContext::update(
     Qt::InputMethodQueries querys)
 {
     QPlatformInputContext::update(querys);
 }
 
-void VirtualKeyboardInputContext::invokeAction(
+void VkPlatformInputContext::invokeAction(
     QInputMethod::Action action,
     int cursorPosition)
 {
@@ -54,74 +84,90 @@ void VirtualKeyboardInputContext::invokeAction(
         action, cursorPosition);
 }
 
-bool VirtualKeyboardInputContext::filterEvent(
+bool VkPlatformInputContext::filterEvent(
     const QEvent* event)
 {
     return QPlatformInputContext::filterEvent(event);
 }
 
-QRectF VirtualKeyboardInputContext::keyboardRect() const
+QRectF VkPlatformInputContext::keyboardRect() const
 {
     return QPlatformInputContext::keyboardRect();
 }
 
-bool VirtualKeyboardInputContext::isAnimating() const
+bool VkPlatformInputContext::isAnimating() const
 {
     return QPlatformInputContext::isAnimating();
 }
 
-void VirtualKeyboardInputContext::showInputPanel()
+void VkPlatformInputContext::showInputPanel()
 {
-    if (m_inputPanel == nullptr)
+    if (m_inputContext == nullptr)
     {
         m_inputPanel = new VkInputPanel();
-        QObject::connect(m_inputPanel,
-            &VkInputPanel::emitEvent,
-            this,
-            &VirtualKeyboardInputContext::slotInputEvent);
     }
-    m_inputPanel->show();
+
+    if (m_inputContext)
+    {
+        m_inputContext->showInputPanel();
+    }
+
+    if (m_inputPanel)
+    {
+        m_inputPanel->show();
+    }
 }
 
-void VirtualKeyboardInputContext::hideInputPanel()
+void VkPlatformInputContext::hideInputPanel()
 {
+    qDebug() << "hideInputPanel";
+    if (m_inputContext)
+    {
+        m_inputContext->hideInputPanel();
+    }
+
     if (m_inputPanel)
     {
         m_inputPanel->hide();
     }
 }
 
-bool VirtualKeyboardInputContext::isInputPanelVisible() const
+bool VkPlatformInputContext::isInputPanelVisible() const
 {
-    if (m_inputPanel)
+    if (m_inputContext)
     {
-        return m_inputPanel->isVisible();
+        return m_inputContext->isInputPanelVisible();
     }
     return false;
 }
 
-QLocale VirtualKeyboardInputContext::locale() const
+QLocale VkPlatformInputContext::locale() const
 {
     return QPlatformInputContext::locale();
 }
 
-Qt::LayoutDirection VirtualKeyboardInputContext::inputDirection() const
+Qt::LayoutDirection VkPlatformInputContext::inputDirection() const
 {
     return QPlatformInputContext::inputDirection();
 }
 
-void VirtualKeyboardInputContext::setFocusObject(QObject* object)
+void VkPlatformInputContext::setFocusObject(QObject* object)
 {
     m_focusObject = object;
 }
 
-void VirtualKeyboardInputContext::slotInputEvent(
-    QEvent* event)
+QObject* VkPlatformInputContext::focusObject()
 {
-    if (m_focusObject)
+    return m_focusObject;
+}
+
+void VkPlatformInputContext::setInputContext(
+    VkInputContext* context)
+{
+    if (m_inputContext == context)
     {
-        QGuiApplication::sendEvent(
-            m_focusObject,
-            event);
+        return;
     }
+
+    m_inputContext = context;
 }

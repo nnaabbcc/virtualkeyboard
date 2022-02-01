@@ -2,7 +2,7 @@
 
 #include <qpa/qplatforminputcontextplugin_p.h>
 
-class VirtualKeyboardInputContextPlugin : public QPlatformInputContextPlugin
+class VkPlatformInputContextPlugin : public QPlatformInputContextPlugin
 {
     Q_OBJECT
 

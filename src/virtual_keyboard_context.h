@@ -1,15 +1,23 @@
 #pragma once
 
 #include <qpa/qplatforminputcontext.h>
-#include "virtual_keyboard_input_panel.h"
 
-class VirtualKeyboardInputContext : public QPlatformInputContext
+class VkInputContext;
+class VkInputPanel;
+
+class VkPlatformInputContext : public QPlatformInputContext
 {
     Q_OBJECT
 
+protected:
+    VkPlatformInputContext();
+
 public:
-    VirtualKeyboardInputContext();
-    virtual ~VirtualKeyboardInputContext();
+    static VkPlatformInputContext* instance();
+    static VkPlatformInputContext* create();
+    static void destory();
+
+    virtual ~VkPlatformInputContext();
 
     bool isValid() const override;
     bool hasCapability(Capability capability) const override;
@@ -31,11 +39,11 @@ public:
     Qt::LayoutDirection inputDirection() const override;
 
     void setFocusObject(QObject* object) override;
+    QObject* focusObject();
+    void setInputContext(VkInputContext* context);
 
 private:
-    void slotInputEvent(QEvent* event);
-
-private:
-    VkInputPanel * m_inputPanel;
+    VkInputContext* m_inputContext;
+    VkInputPanel* m_inputPanel;
     QObject* m_focusObject = nullptr;
 };

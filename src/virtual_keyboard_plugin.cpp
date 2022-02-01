@@ -1,15 +1,17 @@
 #include "virtual_keyboard_plugin.h"
 #include "virtual_keyboard_context.h"
+#include "register_qml_types.h"
 
 QPlatformInputContext*
-VirtualKeyboardInputContextPlugin::create(
+VkPlatformInputContextPlugin::create(
     const QString &key,
     const QStringList & /*paramList*/
 )
 {
     if (key == QString("virtualkeyboard"))
     {
-        return new VirtualKeyboardInputContext;
+        registerQmlTypes();
+        return VkPlatformInputContext::instance();
     }
 
     return nullptr;

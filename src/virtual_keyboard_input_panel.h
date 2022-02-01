@@ -1,21 +1,13 @@
 #pragma once
 
-#include <QWidget>
-#include <QEvent>
+#include <QQuickView>
 
-class VkInputPanel : public QWidget
+class VkInputPanel : public QQuickView
 {
     Q_OBJECT
 
 public:
-    VkInputPanel(QWidget* parent = nullptr);
+    VkInputPanel(QWindow* parent = nullptr);
     virtual ~VkInputPanel();
-
-private Q_SLOTS:
-    void slotKeyPressed();
-    void slotKeyReleased();
-
-Q_SIGNALS:
-    void emitEvent(QEvent* event);
 
 };

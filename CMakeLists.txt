@@ -14,6 +14,5 @@ endif()
 
 find_package(Qt5 5.15.2 EXACT COMPONENTS Core Gui Widgets Quick REQUIRED)
 
-
 add_subdirectory(src)
 add_subdirectory(examples)
