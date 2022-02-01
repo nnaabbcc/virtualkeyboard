@@ -4,8 +4,6 @@
 #include <QRectF>
 #include <QLocale>
 #include <QGuiApplication>
-#include <QApplication>
-#include <QDebug>
 
 static VkPlatformInputContext* gPlatformInputContext = nullptr;
 

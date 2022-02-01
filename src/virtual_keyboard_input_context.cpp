@@ -48,24 +48,37 @@ void VkInputContext::setVisible(bool visible)
     }
 }
 
-void VkInputContext::triggerKey(
+void VkInputContext::triggerKeyPressed(
     int key,
     QString text)
 {
     auto focusObject = VkPlatformInputContext::instance()
         ->focusObject();
-    {
-        QKeyEvent event(QEvent::KeyPress,
-            key,
-            Qt::NoModifier,
-            text);
-        QGuiApplication::sendEvent(focusObject, &event);
-    }
-    {
-        QKeyEvent event(QEvent::KeyRelease,
-            key,
-            Qt::NoModifier,
-            text);
-        QGuiApplication::sendEvent(focusObject, &event);
-    }
+    QKeyEvent event(QEvent::KeyPress,
+        key,
+        Qt::NoModifier,
+        text);
+    QGuiApplication::sendEvent(focusObject, &event);
+}
+
+void VkInputContext::triggerKeyReleased(
+    int key,
+    QString text)
+{
+    auto focusObject = VkPlatformInputContext::instance()
+        ->focusObject();
+
+    QKeyEvent event(QEvent::KeyRelease,
+        key,
+        Qt::NoModifier,
+        text);
+    QGuiApplication::sendEvent(focusObject, &event);
+}
+
+void VkInputContext::triggerKeyClicked(
+    int key,
+    QString text)
+{
+    triggerKeyPressed(key, text);
+    triggerKeyReleased(key, text);
 }

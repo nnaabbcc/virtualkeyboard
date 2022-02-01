@@ -25,7 +25,13 @@ public:
     bool isInputPanelVisible();
     void setVisible(bool visible);
 
-    Q_INVOKABLE void triggerKey(
+    Q_INVOKABLE void triggerKeyPressed(
+        int key,
+        QString text);
+    Q_INVOKABLE void triggerKeyReleased(
+        int key,
+        QString text);
+    Q_INVOKABLE void triggerKeyClicked(
         int key,
         QString text);
 

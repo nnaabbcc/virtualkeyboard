@@ -11,7 +11,7 @@ VkInputPanel::VkInputPanel(QWindow* parent)
 
     setResizeMode(QQuickView::SizeRootObjectToView);
     setSource(QUrl("qrc:///virtual_keyboard/InputPanel.qml"));
-    setGeometry(0, 0, 800, 300);
+    setGeometry(0, 0, 1280, 300);
 }
 
 VkInputPanel::~VkInputPanel()
