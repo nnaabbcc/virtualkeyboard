@@ -100,7 +100,9 @@ bool VkPlatformInputContext::isAnimating() const
 
 void VkPlatformInputContext::showInputPanel()
 {
-    if (m_inputPanel == nullptr)
+    // No Input Context instance created, let's provide a one
+    // in a floating quick window
+    if (m_inputContext == nullptr)
     {
         m_inputPanel = new VkInputPanel();
         if (m_inputContext)
