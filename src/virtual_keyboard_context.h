@@ -1,6 +1,7 @@
 #pragma once
 
 #include <qpa/qplatforminputcontext.h>
+#include "virtual_keyboard_input_panel.h"
 
 class VirtualKeyboardInputContext : public QPlatformInputContext
 {
@@ -30,4 +31,11 @@ public:
     Qt::LayoutDirection inputDirection() const override;
 
     void setFocusObject(QObject* object) override;
+
+private:
+    void slotInputEvent(QEvent* event);
+
+private:
+    VkInputPanel * m_inputPanel;
+    QObject* m_focusObject = nullptr;
 };

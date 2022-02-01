@@ -3,7 +3,9 @@
 #include <QWidget>
 #include <QLabel>
 #include <QLineEdit>
+#include <QTextEdit>
 #include <QFormLayout>
+#include <QPushButton>
 
 int main(int argc, char** argv)
 {
@@ -18,9 +20,12 @@ int main(int argc, char** argv)
 
     auto nameEdit = new QLineEdit;
     auto passEdit = new QLineEdit;
+    auto commEdit = new QTextEdit;
+
     passEdit->setEchoMode(QLineEdit::Password);
     layout->addRow(QObject::tr("&Name"), nameEdit);
     layout->addRow(QObject::tr("&Password"), passEdit);
+    layout->addRow(QObject::tr("&Comment"), commEdit);
 
     mainWidget.setLayout(layout);
     mainWidget.show();

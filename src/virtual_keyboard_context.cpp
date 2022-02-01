@@ -1,16 +1,25 @@
 #include "virtual_keyboard_context.h"
 #include <QRectF>
 #include <QLocale>
+#include <QGuiApplication>
+#include <QApplication>
+#include <QDebug>
 
 VirtualKeyboardInputContext::VirtualKeyboardInputContext()
+    : m_inputPanel(nullptr)
 {}
 
 VirtualKeyboardInputContext::~VirtualKeyboardInputContext()
-{}
+{
+    hideInputPanel();
+    if (m_inputPanel)
+    {
+        m_inputPanel->deleteLater();
+    }
+}
 
 bool VirtualKeyboardInputContext::isValid() const
 {
-    // return QPlatformInputContext::isValid();
     return true;
 }
 
@@ -63,17 +72,32 @@ bool VirtualKeyboardInputContext::isAnimating() const
 
 void VirtualKeyboardInputContext::showInputPanel()
 {
-    QPlatformInputContext::showInputPanel();
+    if (m_inputPanel == nullptr)
+    {
+        m_inputPanel = new VkInputPanel();
+        QObject::connect(m_inputPanel,
+            &VkInputPanel::emitEvent,
+            this,
+            &VirtualKeyboardInputContext::slotInputEvent);
+    }
+    m_inputPanel->show();
 }
 
 void VirtualKeyboardInputContext::hideInputPanel()
 {
-    QPlatformInputContext::hideInputPanel();
+    if (m_inputPanel)
+    {
+        m_inputPanel->hide();
+    }
 }
 
 bool VirtualKeyboardInputContext::isInputPanelVisible() const
 {
-    return QPlatformInputContext::isInputPanelVisible();
+    if (m_inputPanel)
+    {
+        return m_inputPanel->isVisible();
+    }
+    return false;
 }
 
 QLocale VirtualKeyboardInputContext::locale() const
@@ -88,5 +112,16 @@ Qt::LayoutDirection VirtualKeyboardInputContext::inputDirection() const
 
 void VirtualKeyboardInputContext::setFocusObject(QObject* object)
 {
-    QPlatformInputContext::setFocusObject(object);
+    m_focusObject = object;
+}
+
+void VirtualKeyboardInputContext::slotInputEvent(
+    QEvent* event)
+{
+    if (m_focusObject)
+    {
+        QGuiApplication::sendEvent(
+            m_focusObject,
+            event);
+    }
 }
