@@ -100,33 +100,29 @@ bool VkPlatformInputContext::isAnimating() const
 
 void VkPlatformInputContext::showInputPanel()
 {
-    if (m_inputContext == nullptr)
+    if (m_inputPanel == nullptr)
     {
         m_inputPanel = new VkInputPanel();
+        if (m_inputContext)
+        {
+            connect(m_inputContext, &VkInputContext::visibleChanged,
+                [this](){
+                    m_inputPanel->setVisible(isInputPanelVisible());
+                });
+        }
     }
 
     if (m_inputContext)
     {
         m_inputContext->showInputPanel();
     }
-
-    if (m_inputPanel)
-    {
-        m_inputPanel->show();
-    }
 }
 
 void VkPlatformInputContext::hideInputPanel()
 {
-    qDebug() << "hideInputPanel";
     if (m_inputContext)
     {
         m_inputContext->hideInputPanel();
-    }
-
-    if (m_inputPanel)
-    {
-        m_inputPanel->hide();
     }
 }
 

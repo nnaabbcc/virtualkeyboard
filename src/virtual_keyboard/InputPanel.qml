@@ -283,6 +283,8 @@ Item {
                 eventText: ''
                 key: Qt.Key_Control
             }
+
+            KeyboardKey{}
         }
 
     }
