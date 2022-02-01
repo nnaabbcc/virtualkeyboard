@@ -1,4 +1,6 @@
 #include "virtual_keyboard_input_panel.h"
+#include <QGuiApplication>
+#include <QScreen>
 
 VkInputPanel::VkInputPanel(QWindow* parent)
     : QQuickView(parent)
@@ -11,7 +13,15 @@ VkInputPanel::VkInputPanel(QWindow* parent)
 
     setResizeMode(QQuickView::SizeRootObjectToView);
     setSource(QUrl("qrc:///virtual_keyboard/InputPanel.qml"));
-    setGeometry(0, 0, 1280, 300);
+
+    auto w = 1280;
+    auto h = 300;
+    auto screen = qGuiApp->primaryScreen();
+    auto geo = screen->geometry();
+    setGeometry(geo.x() + (geo.width() - w) / 2,
+        geo.height() - h,
+        w,
+        h);
 }
 
 VkInputPanel::~VkInputPanel()
