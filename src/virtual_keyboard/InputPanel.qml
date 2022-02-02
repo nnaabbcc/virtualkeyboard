@@ -72,7 +72,7 @@ Item {
             }
 
             Key {
-                text: '<-'
+                text: 'Backspace'
                 eventText: ''
                 key: Qt.Key_Backspace
             }
