@@ -12,7 +12,8 @@ if (MSVC)
     add_compile_options("/utf-8")
 endif()
 
-find_package(Qt5 5.15.2 EXACT COMPONENTS Core Gui Widgets Quick REQUIRED)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Gui Widgets Quick REQUIRED)
 
 add_subdirectory(src)
 add_subdirectory(examples)

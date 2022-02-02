@@ -10,12 +10,12 @@ add_library(${module_name} SHARED
 )
 
 target_link_libraries(${module_name} PRIVATE
-    Qt5::Gui
-    Qt5::Quick
+    Qt::Gui
+    Qt::Quick
 )
 
 target_include_directories(${module_name} PRIVATE
-    ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
+    ${Qt${QT_VERSION_MAJOR}Gui_PRIVATE_INCLUDE_DIRS}
 )
 
 set_target_properties(${module_name} PROPERTIES

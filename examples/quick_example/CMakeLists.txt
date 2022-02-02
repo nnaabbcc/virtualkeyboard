@@ -6,7 +6,7 @@ add_executable(quick_example WIN32
 )
 
 target_link_libraries(${module_name} PRIVATE
-    Qt5::Quick
+    Qt::Quick
 )
 
 set_target_properties(${module_name} PROPERTIES

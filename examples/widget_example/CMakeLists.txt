@@ -5,7 +5,7 @@ add_executable(widget_example WIN32
 )
 
 target_link_libraries(${module_name} PRIVATE
-    Qt5::Widgets
+    Qt::Widgets
 )
 
 set_target_properties(${module_name} PROPERTIES
