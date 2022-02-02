@@ -7,13 +7,18 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# This fixes issues on machines with default codepages that are not ASCII compatible, such as some CJK encodings
-if (MSVC)
-    add_compile_options("/utf-8")
+if (CMAKE_COMPILER_IS_GNUCXX)
+    add_compile_options(-W -Wall -Wextra)
 endif()
+
+if (MSVC)
+    add_compile_options(/W4 /utf-8)
+endif()
+
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Gui Widgets Quick REQUIRED)
 
+add_subdirectory(3rd)
 add_subdirectory(src)
 add_subdirectory(examples)
