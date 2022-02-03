@@ -50,6 +50,9 @@ private:
     void updateCandidates(size_t count);
     void clearCandidates();
 
+    QString getSysDictPath(QString dictName);
+    QString getUserDictPath(QString dictName);
+
 Q_SIGNALS:
     void visibleChanged();
     void candidatesModelChanged();

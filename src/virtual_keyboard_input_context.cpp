@@ -1,6 +1,8 @@
 #include "virtual_keyboard_input_context.h"
 #include "virtual_keyboard_context.h"
 #include <QGuiApplication>
+#include <QFileInfo>
+#include <QStandardPaths>
 #include <QKeyEvent>
 #include <QQmlEngine>
 #include <QJSEngine>
@@ -97,10 +99,10 @@ void VkInputContext::triggerKeyClicked(
 
 void VkInputContext::loadPinyinIME()
 {
-    auto sysDictPath = "res/raw/dict_pinyin.dat";
-    auto userDictPath = "user_dict_pinyin.dat";
+    auto sysDictPath = getSysDictPath("dict_pinyin.dat");
+    auto userDictPath = getUserDictPath("dict_pinyin.dat");
     auto ok = ime_pinyin::im_open_decoder(
-        sysDictPath, userDictPath);
+        sysDictPath.toLocal8Bit(), userDictPath.toLocal8Bit());
     if (ok)
     {
         m_candidatesModel = new QStringListModel();
@@ -235,4 +237,27 @@ void VkInputContext::selectCandidate(int index)
     {
         updateCandidates(count);
     }
+}
+
+QString VkInputContext::getSysDictPath(QString dictName)
+{
+    auto subfolder = "platforminputcontexts";
+    auto appFolder = qGuiApp->applicationDirPath();
+
+    auto folder = appFolder;
+    {
+        auto file = folder + "/" + subfolder + "/" + dictName;
+        if (QFileInfo::exists(file))
+        {
+            return file;
+        }
+    }
+
+    return QString();
+}
+
+QString VkInputContext::getUserDictPath(QString dictName)
+{
+    auto folder = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+    return folder + "/" + dictName;
 }

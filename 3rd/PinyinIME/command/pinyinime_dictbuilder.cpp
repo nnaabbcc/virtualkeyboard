@@ -30,10 +30,10 @@ int main(int argc, char* argv[]) {
   DictTrie* dict_trie = new DictTrie();
   bool success;
   if (argc >= 3)
-     success = dict_trie->build_dict(argv[1], argv[2]);
+    success = dict_trie->build_dict(argv[1], argv[2]);
   else
-     success = dict_trie->build_dict("../data/rawdict_utf16_65105_freq.txt",
-                                     "../data/valid_utf16.txt");
+    success = dict_trie->build_dict("../data/rawdict_utf16_65105_freq.txt",
+                                    "../data/valid_utf16.txt");
 
   if (success) {
     printf("Build dictionary successfully.\n");
@@ -42,7 +42,10 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  success = dict_trie->save_dict("../../res/raw/dict_pinyin.dat");
+  if (argc >= 4)
+    success = dict_trie->save_dict(argv[3]);
+  else
+    success = dict_trie->save_dict("../../res/raw/dict_pinyin.dat");
 
   if (success) {
     printf("Save dictionary successfully.\n");
