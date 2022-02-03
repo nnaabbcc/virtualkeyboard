@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if (CMAKE_COMPILER_IS_GNUCXX)
-    add_compile_options(-W -Wall -Wextra -fPIC)
+    add_compile_options(-W -Wall -Wextra)
 endif()
 
 if (MSVC)

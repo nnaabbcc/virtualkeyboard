@@ -25,6 +25,9 @@ target_include_directories(PinyinIME PUBLIC
 )
 
 if (NOT WIN32)
+    set_target_properties(PinyinIME PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+    )
     target_link_libraries(PinyinIME PRIVATE
         pthread)
 endif()
