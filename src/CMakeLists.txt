@@ -10,6 +10,7 @@ add_library(${module_name} SHARED
 )
 
 target_link_libraries(${module_name} PRIVATE
+    PinyinIME
     Qt::Gui
     Qt::Quick
 )
