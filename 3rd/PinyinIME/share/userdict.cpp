@@ -20,16 +20,33 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <assert.h>
 #include <ctype.h>
 #include <sys/types.h>
-#include <sys/time.h>
 #include <time.h>
-#include <pthread.h>
 #include <math.h>
+#include <mutex>
+
+#ifdef WIN32
+
+#include <io.h>
+#include <chrono>
+
+int gettimeofday(struct timeval* tp, struct timezone* tzp) {
+  namespace sc = std::chrono;
+  sc::system_clock::duration d = sc::system_clock::now().time_since_epoch();
+  sc::seconds s = sc::duration_cast<sc::seconds>(d);
+  tp->tv_sec = static_cast<long>(s.count());
+  tp->tv_usec = static_cast<long>(sc::duration_cast<sc::microseconds>(d - s).count());
+
+  return 0;
+}
+#else
+#include <unistd.h>
+#include <sys/time.h>
+#endif
 
 namespace ime_pinyin {
 
@@ -55,7 +72,7 @@ static struct timeval _tv_start_, _tv_end_;
 #endif
 
 // XXX File load and write are thread-safe by g_mutex_
-static pthread_mutex_t g_mutex_ = PTHREAD_MUTEX_INITIALIZER;
+static std::mutex g_mutex_;
 static struct timeval g_last_update_ = {0, 0};
 
 inline uint32 UserDict::get_dict_file_size(UserDictInfo * info) {
@@ -291,14 +308,14 @@ bool UserDict::close_dict() {
   // we can not simply write back here
   // To do a safe flush, we have to discard all newly added
   // lemmas and try to reload dict file.
-  pthread_mutex_lock(&g_mutex_);
+  g_mutex_.lock();
   if (load_time_.tv_sec > g_last_update_.tv_sec ||
     (load_time_.tv_sec == g_last_update_.tv_sec &&
      load_time_.tv_usec > g_last_update_.tv_usec)) {
     write_back();
     gettimeofday(&g_last_update_, NULL);
   }
-  pthread_mutex_unlock(&g_mutex_);
+  g_mutex_.unlock();
 
  out:
   free((void*)dict_file_);
@@ -512,15 +529,15 @@ size_t UserDict::_get_lpis(const uint16 *splid_str,
   if (lpi_max <= 0)
     return 0;
 
-  if (0 == pthread_mutex_trylock(&g_mutex_)) {
+  if (g_mutex_.try_lock()) {
     if (load_time_.tv_sec < g_last_update_.tv_sec ||
       (load_time_.tv_sec == g_last_update_.tv_sec &&
        load_time_.tv_usec < g_last_update_.tv_usec)) {
       // Others updated disk file, have to reload
-      pthread_mutex_unlock(&g_mutex_);
+      g_mutex_.unlock();
       flush_cache();
     } else {
-      pthread_mutex_unlock(&g_mutex_);
+      g_mutex_.unlock();
     }
   } else {
   }
@@ -1082,14 +1099,14 @@ bool UserDict::validate(const char *file) {
 }
 
 bool UserDict::load(const char *file, LemmaIdType start_id) {
-  if (0 != pthread_mutex_trylock(&g_mutex_)) {
+  if (!g_mutex_.try_lock()) {
     return false;
   }
   // b is ignored in POSIX compatible os including Linux
   // while b is important flag for Windows to specify binary mode
   FILE *fp = fopen(file, "rb");
   if (!fp) {
-    pthread_mutex_unlock(&g_mutex_);
+    g_mutex_.unlock();
     return false;
   }
 
@@ -1213,7 +1230,7 @@ bool UserDict::load(const char *file, LemmaIdType start_id) {
 
   fclose(fp);
 
-  pthread_mutex_unlock(&g_mutex_);
+  g_mutex_.unlock();
   return true;
 
  error:
@@ -1229,7 +1246,7 @@ bool UserDict::load(const char *file, LemmaIdType start_id) {
   if (predicts) free(predicts);
 #endif
   fclose(fp);
-  pthread_mutex_unlock(&g_mutex_);
+  g_mutex_.unlock();
   return false;
 }
 
@@ -1263,8 +1280,10 @@ void UserDict::write_back() {
   }
   // It seems truncate is not need on Linux, Windows except Mac
   // I am doing it here anyway for safety.
+#ifndef WIN32
   off_t cur = lseek(fd, 0, SEEK_CUR);
   ftruncate(fd, cur);
+#endif
   close(fd);
   state_ = USER_DICT_SYNC;
 }
@@ -1924,10 +1943,10 @@ bool UserDict::state(UserDictStat * stat) {
   stat->file_name = dict_file_;
   stat->load_time.tv_sec = load_time_.tv_sec;
   stat->load_time.tv_usec = load_time_.tv_usec;
-  pthread_mutex_lock(&g_mutex_);
+  g_mutex_.lock();
   stat->last_update.tv_sec = g_last_update_.tv_sec;
   stat->last_update.tv_usec = g_last_update_.tv_usec;
-  pthread_mutex_unlock(&g_mutex_);
+  g_mutex_.unlock();
   stat->disk_size = get_dict_file_size(&dict_info_);
   stat->lemma_count = dict_info_.lemma_count;
   stat->lemma_size = dict_info_.lemma_size;
