@@ -42,6 +42,12 @@ public:
     QObject* focusObject();
     void setInputContext(VkInputContext* context);
 
+protected:
+    QVariant inputMethodQuery(Qt::InputMethodQuery query);
+
+private Q_SLOTS:
+    void slotInputContextVisibleChanged();
+
 private:
     VkInputContext* m_inputContext;
     VkInputPanel* m_inputPanel;

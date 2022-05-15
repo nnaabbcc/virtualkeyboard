@@ -71,7 +71,27 @@ void VkPlatformInputContext::commit()
 void VkPlatformInputContext::update(
     Qt::InputMethodQueries querys)
 {
-    QPlatformInputContext::update(querys);
+    Q_UNUSED(querys);
+
+    if (m_inputContext)
+    {
+        auto enabled = inputMethodQuery(Qt::ImEnabled).toBool();
+        if (!enabled)
+        {
+            hideInputPanel();
+        }
+    }
+}
+
+QVariant VkPlatformInputContext::inputMethodQuery(
+    Qt::InputMethodQuery query)
+{
+    QInputMethodQueryEvent event(query);
+    if (m_focusObject)
+    {
+        QGuiApplication::sendEvent(m_focusObject, &event);
+    }
+    return event.value(query);
 }
 
 void VkPlatformInputContext::invokeAction(
@@ -101,23 +121,19 @@ bool VkPlatformInputContext::isAnimating() const
 void VkPlatformInputContext::showInputPanel()
 {
     // No Input Context instance created, let's provide a one
-    // in a floating quick window
+    // in a floating quick window, we provide Input Context by
+    // through input panel
     if (m_inputContext == nullptr)
     {
         m_inputPanel = new VkInputPanel();
-        if (m_inputContext)
-        {
-            connect(m_inputContext, &VkInputContext::visibleChanged,
-                [this](){
-                    m_inputPanel->setVisible(isInputPanelVisible());
-                });
-        }
     }
 
     if (m_inputContext)
     {
         m_inputContext->showInputPanel();
     }
+
+    emitInputPanelVisibleChanged();
 }
 
 void VkPlatformInputContext::hideInputPanel()
@@ -126,6 +142,8 @@ void VkPlatformInputContext::hideInputPanel()
     {
         m_inputContext->hideInputPanel();
     }
+
+    emitInputPanelVisibleChanged();
 }
 
 bool VkPlatformInputContext::isInputPanelVisible() const
@@ -150,6 +168,7 @@ Qt::LayoutDirection VkPlatformInputContext::inputDirection() const
 void VkPlatformInputContext::setFocusObject(QObject* object)
 {
     m_focusObject = object;
+    update(Qt::ImQueryAll);
 }
 
 QObject* VkPlatformInputContext::focusObject()
@@ -165,5 +184,27 @@ void VkPlatformInputContext::setInputContext(
         return;
     }
 
+    if (m_inputContext)
+    {
+        disconnect(m_inputContext, &VkInputContext::visibleChanged,
+            this, &VkPlatformInputContext::slotInputContextVisibleChanged);
+    }
+
     m_inputContext = context;
+
+    if (m_inputContext)
+    {
+        connect(m_inputContext, &VkInputContext::visibleChanged,
+            this, &VkPlatformInputContext::slotInputContextVisibleChanged);
+    }
+}
+
+void VkPlatformInputContext::slotInputContextVisibleChanged()
+{
+    if (m_inputPanel)
+    {
+        m_inputPanel->setVisible(isInputPanelVisible());
+    }
+
+    emitInputPanelVisibleChanged();
 }
