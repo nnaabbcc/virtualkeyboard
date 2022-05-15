@@ -21,11 +21,13 @@ int main(int argc, char** argv)
     auto nameEdit = new QLineEdit;
     auto passEdit = new QLineEdit;
     auto commEdit = new QTextEdit;
+    auto commitBtn = new QPushButton(QObject::tr("Commit"));
 
     passEdit->setEchoMode(QLineEdit::Password);
     layout->addRow(QObject::tr("&Name"), nameEdit);
     layout->addRow(QObject::tr("&Password"), passEdit);
     layout->addRow(QObject::tr("&Comment"), commEdit);
+    layout->addWidget(commitBtn);
 
     mainWidget.setLayout(layout);
     mainWidget.show();
