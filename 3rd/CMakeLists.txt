@@ -72,6 +72,9 @@ set_target_properties(PinyinIMEDictBuilder PROPERTIES
 file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/PinyinIME/data/rawdict_utf16_65105_freq.txt" raw_dict_path)
 file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/PinyinIME/data/valid_utf16.txt" valid_utf16_path)
 file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/bin/platforminputcontexts/dict_pinyin.dat" output_dict_path)
+if (NOT EXISTS "${CMAKE_BINARY_DIR}/bin/platforminputcontexts/")
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/platforminputcontexts/")
+endif()
 add_custom_command(
     TARGET PinyinIMEDictBuilder
     POST_BUILD
