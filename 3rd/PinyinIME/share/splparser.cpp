@@ -162,7 +162,7 @@ uint16 SpellingParser::splstr16_to_idxs(const char16 *splstr, uint16 str_len,
   if (NULL == splstr || 0 == max_size || 0 == str_len)
     return 0;
 
-  if (!SpellingTrie::is_valid_spl_char(splstr[0]))
+  if (!SpellingTrie::is_valid_spl_char(static_cast<char>(splstr[0])))
     return 0;
 
   last_is_pre = false;
@@ -178,7 +178,7 @@ uint16 SpellingParser::splstr16_to_idxs(const char16 *splstr, uint16 str_len,
   while (str_pos < str_len) {
     char16 char_this = splstr[str_pos];
     // all characters outside of [a, z] are considered as splitters
-    if (!SpellingTrie::is_valid_spl_char(char_this)) {
+    if (!SpellingTrie::is_valid_spl_char(static_cast<char>(char_this))) {
       // test if the current node is endable
       uint16 id_this = node_this->spelling_idx;
       if (spl_trie_->if_valid_id_update(&id_this)) {
@@ -222,7 +222,7 @@ uint16 SpellingParser::splstr16_to_idxs(const char16 *splstr, uint16 str_len,
       for (int i = 0; i < node_this->num_of_son; i++) {
         SpellingNode *this_son = first_son + i;
         if (SpellingTrie::is_same_spl_char(
-            this_son->char_this_node, char_this)) {
+            this_son->char_this_node, static_cast<char>(char_this))) {
           found_son = this_son;
           break;
         }

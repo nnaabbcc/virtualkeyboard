@@ -343,7 +343,7 @@ bool SpellingTrie::construct(const char* spelling_arr, size_t item_size,
 
 #ifdef ___BUILD_MODEL___
   if (kPrintDebug0) {
-    printf("---SpellingTrie Nodes: %d\n", node_num_);
+    printf("---SpellingTrie Nodes: %zu\n", node_num_);
   }
   return build_ym_info();
 #else
@@ -496,7 +496,7 @@ SpellingNode* SpellingTrie::construct_spellings_subset(
                                        node_current);
 
         if (real_start == item_start_next + 1) {
-          uint16 score_this = static_cast<unsigned char>(
+          auto score_this = static_cast<unsigned char>(
               spelling_last_start[spelling_size_ - 1]);
           if (score_this < node_current->score)
             node_current->score = score_this;
@@ -520,7 +520,7 @@ SpellingNode* SpellingTrie::construct_spellings_subset(
         if (char_for_node > 'S')
           node_current->spelling_idx++;
 
-        h2f_num_[node_current->spelling_idx] = i - item_start_next;
+        h2f_num_[node_current->spelling_idx] = static_cast<uint16>(i - item_start_next);
         is_half = true;
       } else if (level == 1 && char_for_node == 'h') {
         char ch_level0 = spelling_last_start[0];
@@ -533,7 +533,7 @@ SpellingNode* SpellingTrie::construct_spellings_subset(
           part_id = 'Z' - 'A' + 1 + 3;
         if (0 != part_id) {
           node_current->spelling_idx = part_id;
-          h2f_num_[node_current->spelling_idx] = i - item_start_next;
+          h2f_num_[node_current->spelling_idx] = static_cast<uint16>(i - item_start_next);
           is_half = true;
         }
       }
@@ -541,7 +541,7 @@ SpellingNode* SpellingTrie::construct_spellings_subset(
       if (is_half) {
         if (h2f_num_[node_current->spelling_idx] > 0)
           h2f_start_[node_current->spelling_idx] =
-            item_start_next + kFullSplIdStart;
+            static_cast<uint16>(item_start_next + kFullSplIdStart);
         else
           h2f_start_[node_current->spelling_idx] = 0;
       }
@@ -581,7 +581,7 @@ SpellingNode* SpellingTrie::construct_spellings_subset(
                                    node_current);
 
     if (real_start == item_start_next + 1) {
-      uint16 score_this = static_cast<unsigned char>(
+      auto score_this = static_cast<unsigned char>(
           spelling_last_start[spelling_size_ - 1]);
       if (score_this < node_current->score)
         node_current->score = score_this;
@@ -606,7 +606,7 @@ SpellingNode* SpellingTrie::construct_spellings_subset(
     if (char_for_node > 'S')
       node_current->spelling_idx++;
 
-    h2f_num_[node_current->spelling_idx] = item_end - item_start_next;
+    h2f_num_[node_current->spelling_idx] = static_cast<uint16>(item_end - item_start_next);
     is_half = true;
   } else if (level == 1 && char_for_node == 'h') {
     char ch_level0 = spelling_last_start[0];
@@ -619,14 +619,14 @@ SpellingNode* SpellingTrie::construct_spellings_subset(
       part_id = 'Z' - 'A' + 1 + 3;
     if (0 != part_id) {
       node_current->spelling_idx = part_id;
-      h2f_num_[node_current->spelling_idx] = item_end - item_start_next;
+      h2f_num_[node_current->spelling_idx] = static_cast<uint16>(item_end - item_start_next);
       is_half = true;
     }
   }
   if (is_half) {
     if (h2f_num_[node_current->spelling_idx] > 0)
       h2f_start_[node_current->spelling_idx] =
-        item_start_next + kFullSplIdStart;
+        static_cast<uint16>(item_start_next + kFullSplIdStart);
     else
       h2f_start_[node_current->spelling_idx] = 0;
   }
@@ -740,7 +740,7 @@ const char* SpellingTrie::get_spelling_str(uint16 splid) {
         splid--;
       if (splid > 'S' - 'A' + 1)
         splid--;
-      splstr_queried_[0] = 'A' + splid - 1;
+      splstr_queried_[0] = static_cast<char>('A' + splid - 1);
       splstr_queried_[1] = '\0';
     }
   }

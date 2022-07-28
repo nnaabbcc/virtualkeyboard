@@ -322,7 +322,7 @@ void DictBuilder::get_top_lemmas() {
   if (kPrintDebug0) {
     printf("\n------Top Lemmas------------------\n");
     for (size_t pos = 0; pos < top_lmas_num_; pos++) {
-      printf("--%d, idx:%06d, score:%.5f\n", pos, top_lmas_[pos].idx_by_hz,
+      printf("--%zu, idx:%06zu, score:%.5f\n", pos, top_lmas_[pos].idx_by_hz,
              top_lmas_[pos].freq);
     }
   }
@@ -424,7 +424,7 @@ size_t DictBuilder::read_raw_dict(const char* fn_raw,
     // Copy to the lemma entry
     utf16_strcpy(lemma_arr_[i].hanzi_str, token);
 
-    lemma_arr_[i].hz_str_len = token_size;
+    lemma_arr_[i].hz_str_len = static_cast<unsigned char>(token_size);
 
     // Get the freq string
     token = utf16_strtok(to_tokenize, &token_size, &to_tokenize);
@@ -496,7 +496,7 @@ size_t DictBuilder::read_raw_dict(const char* fn_raw,
   delete [] valid_hzs;
   utf16_reader.close();
 
-  printf("read succesfully, lemma num: %d\n", lemma_num);
+  printf("read succesfully, lemma num: %zu\n", lemma_num);
 
   return lemma_num;
 }
@@ -544,7 +544,7 @@ bool DictBuilder::build_dict(const char *fn_raw,
       bool is_pre = true;
       int spl_idx_num =
         spl_parser_->splstr_to_idxs(lemma_arr_[i].pinyin_str[hz_pos],
-                                    strlen(lemma_arr_[i].pinyin_str[hz_pos]),
+                                    static_cast<uint16>(strlen(lemma_arr_[i].pinyin_str[hz_pos])),
                                     spl_idxs, spl_start_pos, 2, is_pre);
       assert(1 == spl_idx_num);
 
@@ -624,9 +624,9 @@ bool DictBuilder::build_dict(const char *fn_raw,
   }
 
   if (kPrintDebug0) {
-    printf("homo_idx_num_eq1_: %d\n", homo_idx_num_eq1_);
-    printf("homo_idx_num_gt1_: %d\n", homo_idx_num_gt1_);
-    printf("top_lmas_num_: %d\n", top_lmas_num_);
+    printf("homo_idx_num_eq1_: %zu\n", homo_idx_num_eq1_);
+    printf("homo_idx_num_gt1_: %zu\n", homo_idx_num_gt1_);
+    printf("top_lmas_num_: %zu\n", top_lmas_num_);
   }
 
   free_resource();
@@ -720,7 +720,7 @@ size_t DictBuilder::build_scis() {
       if (1 == hz_num)
         scis_[scis_num_].freq = lemma_arr_[pos].freq;
       else
-        scis_[scis_num_].freq = 0.000001;
+        scis_[scis_num_].freq = 0.000001f;
       scis_num_++;
     }
   }
@@ -816,7 +816,7 @@ bool DictBuilder::construct_subset(void* parent, LemmaEntry* lemma_arr,
   LmaNodeGE1 *son_1st_ge1 = NULL;  // only one of le0 or ge1 is used.
   if (0 == level) {                 // the parent is root
     (static_cast<LmaNodeLE0*>(parent))->son_1st_off =
-      lma_nds_used_num_le0_;
+      static_cast<uint32>(lma_nds_used_num_le0_);
     son_1st_le0 = lma_nodes_le0_ + lma_nds_used_num_le0_;
     lma_nds_used_num_le0_ += parent_son_num;
 
@@ -825,7 +825,7 @@ bool DictBuilder::construct_subset(void* parent, LemmaEntry* lemma_arr,
       static_cast<uint16>(parent_son_num);
   } else if (1 == level) {  // the parent is a son of root
     (static_cast<LmaNodeLE0*>(parent))->son_1st_off =
-      lma_nds_used_num_ge1_;
+      static_cast<uint32>(lma_nds_used_num_ge1_);
     son_1st_ge1 = lma_nodes_ge1_ + lma_nds_used_num_ge1_;
     lma_nds_used_num_ge1_ += parent_son_num;
 
@@ -869,7 +869,7 @@ bool DictBuilder::construct_subset(void* parent, LemmaEntry* lemma_arr,
       if (0 == level) {
         node_cur_le0 = son_1st_le0 + son_pos;
         node_cur_le0->spl_idx = spl_idx_node;
-        node_cur_le0->homo_idx_buf_off = homo_idx_num_eq1_ + homo_idx_num_gt1_;
+        node_cur_le0->homo_idx_buf_off = static_cast<uint32>(homo_idx_num_eq1_ + homo_idx_num_gt1_);
         node_cur_le0->son_1st_off = 0;
         homo_idx_num_eq1_ += homo_num;
       } else {
@@ -938,7 +938,7 @@ bool DictBuilder::construct_subset(void* parent, LemmaEntry* lemma_arr,
   if (0 == level) {
     node_cur_le0 = son_1st_le0 + son_pos;
     node_cur_le0->spl_idx = spl_idx_node;
-    node_cur_le0->homo_idx_buf_off = homo_idx_num_eq1_ + homo_idx_num_gt1_;
+    node_cur_le0->homo_idx_buf_off = static_cast<uint32>(homo_idx_num_eq1_ + homo_idx_num_gt1_);
     node_cur_le0->son_1st_off = 0;
     homo_idx_num_eq1_ += homo_num;
   } else {
@@ -1021,48 +1021,48 @@ void DictBuilder::stat_print() {
   printf("[root is layer -1]\n");
   printf(".. max_sonbuf_len per layer(from layer 0):\n   ");
   for (size_t i = 0; i < kMaxLemmaSize; i++)
-    printf("%d, ", max_sonbuf_len_[i]);
+    printf("%zu, ", max_sonbuf_len_[i]);
   printf("-, \n");
 
   printf(".. max_homobuf_len per layer:\n   -, ");
   for (size_t i = 0; i < kMaxLemmaSize; i++)
-    printf("%d, ", max_homobuf_len_[i]);
+    printf("%zu, ", max_homobuf_len_[i]);
   printf("\n");
 
   printf(".. total_son_num per layer:\n   ");
   for (size_t i = 0; i < kMaxLemmaSize; i++)
-    printf("%d, ", total_son_num_[i]);
+    printf("%zu, ", total_son_num_[i]);
   printf("-, \n");
 
   printf(".. total_node_hasson per layer:\n   1, ");
   for (size_t i = 0; i < kMaxLemmaSize; i++)
-    printf("%d, ", total_node_hasson_[i]);
+    printf("%zu, ", total_node_hasson_[i]);
   printf("\n");
 
   printf(".. total_sonbuf_num per layer:\n   ");
   for (size_t i = 0; i < kMaxLemmaSize; i++)
-    printf("%d, ", total_sonbuf_num_[i]);
+    printf("%zu, ", total_sonbuf_num_[i]);
   printf("-, \n");
 
   printf(".. total_sonbuf_allnoson per layer:\n   ");
   for (size_t i = 0; i < kMaxLemmaSize; i++)
-    printf("%d, ", total_sonbuf_allnoson_[i]);
+    printf("%zu, ", total_sonbuf_allnoson_[i]);
   printf("-, \n");
 
   printf(".. total_node_in_sonbuf_allnoson per layer:\n   ");
   for (size_t i = 0; i < kMaxLemmaSize; i++)
-    printf("%d, ", total_node_in_sonbuf_allnoson_[i]);
+    printf("%zu, ", total_node_in_sonbuf_allnoson_[i]);
   printf("-, \n");
 
   printf(".. total_homo_num per layer:\n   0, ");
   for (size_t i = 0; i < kMaxLemmaSize; i++)
-    printf("%d, ", total_homo_num_[i]);
+    printf("%zu, ", total_homo_num_[i]);
   printf("\n");
 
-  printf(".. son buf allocation number with only 1 son: %d\n", sonbufs_num1_);
-  printf(".. son buf allocation number with more than 1 son: %d\n",
+  printf(".. son buf allocation number with only 1 son: %zu\n", sonbufs_num1_);
+  printf(".. son buf allocation number with more than 1 son: %zu\n",
          sonbufs_numgt1_);
-  printf(".. total lemma node number: %d\n", total_lma_node_num_ + 1);
+  printf(".. total lemma node number: %zu\n", total_lma_node_num_ + 1);
 }
 #endif  // ___DO_STATISTICS___
 

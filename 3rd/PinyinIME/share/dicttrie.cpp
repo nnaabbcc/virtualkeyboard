@@ -223,7 +223,7 @@ bool DictTrie::load_dict(FILE *fp) {
   size_t last_pos = 0;
   for (size_t i = 1; i < lma_node_num_le0_; i++) {
     for (uint16 splid = last_splid; splid < root_[i].spl_idx; splid++)
-      splid_le0_index_[splid - kFullSplIdStart] = last_pos;
+      splid_le0_index_[splid - kFullSplIdStart] = static_cast<uint16>(last_pos);
 
     splid_le0_index_[root_[i].spl_idx - kFullSplIdStart] =
         static_cast<uint16>(i);
@@ -234,7 +234,7 @@ bool DictTrie::load_dict(FILE *fp) {
   for (uint16 splid = last_splid + 1;
        splid < buf_size + kFullSplIdStart; splid++) {
     assert(static_cast<size_t>(splid - kFullSplIdStart) < buf_size);
-    splid_le0_index_[splid - kFullSplIdStart] = last_pos + 1;
+    splid_le0_index_[splid - kFullSplIdStart] = static_cast<uint16>(last_pos + 1);
   }
 
   return true;
@@ -506,7 +506,7 @@ MileStoneHandle DictTrie::extend_dict1(MileStoneHandle from_handle,
   }
 
   if (ret_val > 0) {
-    mile_stones_[mile_stones_pos_].mark_num = ret_val;
+    mile_stones_[mile_stones_pos_].mark_num = static_cast<uint16>(ret_val);
     ret_handle = mile_stones_pos_;
     mile_stones_pos_++;
     ret_val = 1;
@@ -584,7 +584,7 @@ MileStoneHandle DictTrie::extend_dict2(MileStoneHandle from_handle,
   }  // for h_pos
 
   if (ret_val > 0) {
-    mile_stones_[mile_stones_pos_].mark_num = ret_val;
+    mile_stones_[mile_stones_pos_].mark_num = static_cast<uint16>(ret_val);
     ret_handle = mile_stones_pos_;
     mile_stones_pos_++;
   }
@@ -604,7 +604,7 @@ bool DictTrie::try_extend(const uint16 *splids, uint16 splid_num,
   for (uint16 pos = 1; pos < splid_num; pos++) {
     if (1 == pos) {
       LmaNodeLE0 *node_le0 = reinterpret_cast<LmaNodeLE0*>(node);
-      LmaNodeGE1 *node_son;
+      LmaNodeGE1 *node_son = nullptr;
       uint16 son_pos;
       for (son_pos = 0; son_pos < static_cast<uint16>(node_le0->num_of_son);
            son_pos++) {
@@ -620,7 +620,7 @@ bool DictTrie::try_extend(const uint16 *splids, uint16 splid_num,
         return false;
     } else {
       LmaNodeGE1 *node_ge1 = reinterpret_cast<LmaNodeGE1*>(node);
-      LmaNodeGE1 *node_son;
+      LmaNodeGE1 *node_son = nullptr;
       uint16 son_pos;
       for (son_pos = 0; son_pos < static_cast<uint16>(node_ge1->num_of_son);
            son_pos++) {
@@ -911,7 +911,7 @@ LemmaIdType DictTrie::get_lemma_id(const char16 lemma_str[], uint16 lemma_len) {
 }
 
 size_t DictTrie::predict_top_lmas(size_t his_len, NPredictItem *npre_items,
-                                  size_t npre_max, size_t b4_used) {
+                                  size_t npre_max, size_t /*b4_used*/) {
   NGram &ngram = NGram::get_instance();
 
   size_t item_num = 0;
@@ -927,7 +927,7 @@ size_t DictTrie::predict_top_lmas(size_t his_len, NPredictItem *npre_items,
       continue;
     }
     npre_items[item_num].psb = ngram.get_uni_psb(top_lma_id);
-    npre_items[item_num].his_len = his_len;
+    npre_items[item_num].his_len = static_cast<uint16>(his_len);
     item_num++;
   }
   return item_num;

@@ -124,7 +124,7 @@ size_t DictList::calculate_size(const LemmaEntry* lemma_arr, size_t lemma_num) {
 
       id_num++;
       start_pos_[0] = 0;
-      start_id_[0] = id_num;
+      start_id_[0] = static_cast<uint32>(id_num);
 
       last_hz_len = 1;
       list_size += last_hz_len;
@@ -142,10 +142,10 @@ size_t DictList::calculate_size(const LemmaEntry* lemma_arr, size_t lemma_num) {
           start_id_[len] = start_id_[len - 1];
         }
 
-        start_pos_[current_hz_len - 1] = list_size;
+        start_pos_[current_hz_len - 1] = static_cast<uint32>(list_size);
 
         id_num++;
-        start_id_[current_hz_len - 1] = id_num;
+        start_id_[current_hz_len - 1] = static_cast<uint32>(id_num);
 
         last_hz_len = current_hz_len;
         list_size += current_hz_len;
@@ -158,8 +158,8 @@ size_t DictList::calculate_size(const LemmaEntry* lemma_arr, size_t lemma_num) {
       start_pos_[0] = 0;
       start_id_[0] = 1;
     } else {
-      start_pos_[i] = list_size;
-      start_id_[i] = id_num;
+      start_pos_[i] = static_cast<uint32>(list_size);
+      start_id_[i] = static_cast<uint32>(id_num);
     }
   }
 
@@ -321,7 +321,7 @@ uint16 DictList::get_splids_for_hanzi(char16 hanzi, uint16 half_splid,
   char16 *hz_f = hz_found;
   bool strict = false;
   while (hz_f < scis_hz_ + scis_num_ && hanzi == *hz_f) {
-    uint16 pos = hz_f - scis_hz_;
+    uint16 pos = static_cast<uint16>(hz_f - scis_hz_);
     if (0 == half_splid || scis_splid_[pos].half_splid == half_splid) {
       strict = true;
     }
@@ -330,7 +330,7 @@ uint16 DictList::get_splids_for_hanzi(char16 hanzi, uint16 half_splid,
 
   uint16 found_num = 0;
   while (hz_found < scis_hz_ + scis_num_ && hanzi == *hz_found) {
-    uint16 pos = hz_found - scis_hz_;
+    uint16 pos = static_cast<uint16>(hz_found - scis_hz_);
     if (0 == half_splid ||
         (strict && scis_splid_[pos].half_splid == half_splid) ||
         (!strict && spl_trie_->half_full_compatible(half_splid,

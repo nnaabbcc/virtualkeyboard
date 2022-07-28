@@ -102,7 +102,7 @@ extern "C" {
   }
 
   // To be removed
-  size_t im_add_letter(char ch) {
+  size_t im_add_letter(char /*ch*/) {
     return 0;
   }
 
@@ -159,13 +159,6 @@ extern "C" {
                          char16 (*&pre_buf)[kMaxPredictSize + 1]) {
     if (NULL == his_buf)
       return 0;
-
-    size_t fixed_len = utf16_strlen(his_buf);
-    const char16 *fixed_ptr = his_buf;
-    if (fixed_len > kMaxPredictSize) {
-      fixed_ptr += fixed_len - kMaxPredictSize;
-      fixed_len = kMaxPredictSize;
-    }
 
     pre_buf = predict_buf;
     return matrix_search->get_predicts(his_buf, pre_buf, kMaxPredictNum);

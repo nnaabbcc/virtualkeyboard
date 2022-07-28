@@ -87,7 +87,7 @@ extern "C" {
     if (utf16_strlen(utf16_str) >= 256) return 0;
 
     utf16_strcpy_tochar(char8, utf16_str);
-    return atof(char8);
+    return static_cast<float>(atof(char8));
   }
 
   size_t utf16_strlen(const char16 *utf16_str) {
@@ -171,7 +171,7 @@ extern "C" {
       cp++;
       src++;
     }
-    *cp = *src;
+    *cp = static_cast<char>(*src);
 
     return dst;
   }

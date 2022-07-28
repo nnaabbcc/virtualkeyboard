@@ -34,7 +34,7 @@
 #include <io.h>
 #include <chrono>
 
-int gettimeofday(struct timeval* tp, struct timezone* tzp) {
+int gettimeofday(struct timeval* tp, struct timezone* /*tzp*/) {
   namespace sc = std::chrono;
   sc::system_clock::duration d = sc::system_clock::now().time_since_epoch();
   sc::seconds s = sc::duration_cast<sc::seconds>(d);
@@ -91,8 +91,8 @@ inline LmaScoreType UserDict::translate_score(int raw_score) {
   uint32 ori_freq = extract_score_freq(raw_score);
   // 2) lmt_off: lmt index (week offset for example)
   uint64 lmt_off = ((raw_score & 0xffff0000) >> 16);
-  if (kUserDictLMTBitWidth < 16) {
-    uint64 mask = ~(1 << kUserDictLMTBitWidth);
+  if constexpr (kUserDictLMTBitWidth < 16) {
+    uint64 mask = ~(1U << kUserDictLMTBitWidth);
     lmt_off &= mask;
   }
   // 3) now_off: current time index (current week offset for example)
@@ -102,7 +102,7 @@ inline LmaScoreType UserDict::translate_score(int raw_score) {
   now_off = (now_off << (64 - kUserDictLMTBitWidth));
   now_off = (now_off >> (64 - kUserDictLMTBitWidth));
   // 4) factor: decide expand-factor
-  int delta = now_off - lmt_off;
+  int delta = static_cast<int>(now_off - lmt_off);
   if (delta > 4)
     delta = 4;
   int factor = 80 - (delta << 4);
@@ -120,8 +120,8 @@ inline int UserDict::extract_score_freq(int raw_score) {
 
 inline uint64 UserDict::extract_score_lmt(int raw_score) {
   uint64 lmt = ((raw_score & 0xffff0000) >> 16);
-  if (kUserDictLMTBitWidth < 16) {
-    uint64 mask = ~(1 << kUserDictLMTBitWidth);
+  if constexpr (kUserDictLMTBitWidth < 16) {
+    uint64 mask = ~(1U << kUserDictLMTBitWidth);
     lmt &= mask;
   }
   lmt = lmt * kUserDictLMTGranularity + kUserDictLMTSince;
@@ -266,7 +266,7 @@ UserDict::~UserDict() {
 }
 
 bool UserDict::load_dict(const char *file_name, LemmaIdType start_id,
-                         LemmaIdType end_id) {
+                         LemmaIdType /*end_id*/) {
 #ifdef ___DEBUG_PERF___
   DEBUG_PERF_BEGIN;
 #endif
@@ -355,11 +355,11 @@ size_t UserDict::number_of_lemmas() {
   return dict_info_.lemma_count;
 }
 
-void UserDict::reset_milestones(uint16 from_step, MileStoneHandle from_handle) {
+void UserDict::reset_milestones(uint16 /*from_step*/, MileStoneHandle /*from_handle*/) {
   return;
 }
 
-MileStoneHandle UserDict::extend_dict(MileStoneHandle from_handle,
+MileStoneHandle UserDict::extend_dict(MileStoneHandle /*from_handle*/,
                                       const DictExtPara *dep,
                                       LmaPsbItem *lpi_items,
                                       size_t lpi_max, size_t *lpi_num) {
@@ -641,7 +641,7 @@ uint16 UserDict::get_lemma_str(LemmaIdType id_lemma, char16* str_buf,
 }
 
 uint16 UserDict::get_lemma_splids(LemmaIdType id_lemma, uint16 *splids,
-                                  uint16 splids_max, bool arg_valid) {
+                                  uint16 splids_max, bool /*arg_valid*/) {
   if (is_valid_lemma_id(id_lemma) == false)
     return 0;
   uint32 offset = offsets_by_id_[id_lemma - start_id_];
@@ -650,12 +650,12 @@ uint16 UserDict::get_lemma_splids(LemmaIdType id_lemma, uint16 *splids,
   int i = 0;
   for (; i < nchar && i < splids_max; i++)
     splids[i] = ids[i];
-  return i;
+  return static_cast<uint16>(i);
 }
 
 size_t UserDict::predict(const char16 last_hzs[], uint16 hzs_len,
                          NPredictItem *npre_items, size_t npre_max,
-                         size_t b4_used) {
+                         size_t /*b4_used*/) {
   uint32 new_added = 0;
 #ifdef ___PREDICT_ENABLED___
   int32 end = dict_info_.lemma_count - 1;
@@ -687,7 +687,7 @@ size_t UserDict::predict(const char16 last_hzs[], uint16 hzs_len,
           (nchar < kMaxPredictSize ? (nchar << 1) : (kMaxPredictSize << 1))
           - (hzs_len << 1);
       npre_items[new_added].his_len = hzs_len;
-      npre_items[new_added].psb = get_lemma_score(words, splids, nchar);
+      npre_items[new_added].psb = get_lemma_score(words, splids, static_cast<uint16>(nchar));
       memcpy(npre_items[new_added].pre_hzs, words + hzs_len, cpy_len);
       if ((cpy_len >> 1) < kMaxPredictSize) {
         npre_items[new_added].pre_hzs[cpy_len >> 1] = 0;
@@ -907,7 +907,7 @@ int UserDict::_get_lemma_score(LemmaIdType lemma_id) {
   uint16 * spl = get_lemma_spell_ids(offset);
   uint16 * wrd = get_lemma_word(offset);
 
-  int32 off = locate_in_offsets(wrd, spl, nchar);
+  int32 off = locate_in_offsets(wrd, spl, static_cast<uint16>(nchar));
   if (off == -1) {
     return 0;
   }
@@ -999,7 +999,7 @@ bool UserDict::remove_lemma(LemmaIdType lemma_id) {
   uint16 * spl = get_lemma_spell_ids(offset);
   uint16 * wrd = get_lemma_word(offset);
 
-  int32 off = locate_in_offsets(wrd, spl, nchar);
+  int32 off = locate_in_offsets(wrd, spl, static_cast<uint16>(nchar));
 
   return remove_lemma_by_offset_index(off);
 }
@@ -1076,7 +1076,7 @@ bool UserDict::validate(const char *file) {
     goto error;
   }
 
-  err = fseek(fp, -1 * sizeof(dict_info), SEEK_END);
+  err = fseek(fp, -1 * static_cast<long>(sizeof(dict_info)), SEEK_END);
   if (err) {
     goto error;
   }
@@ -1126,7 +1126,7 @@ bool UserDict::load(const char *file, LemmaIdType start_id) {
   size_t i;
   int err;
 
-  err = fseek(fp, -1 * sizeof(dict_info), SEEK_END);
+  err = fseek(fp, -1 * static_cast<long>(sizeof(dict_info)), SEEK_END);
   if (err) goto error;
 
   readed = fread(&dict_info, 1, sizeof(dict_info), fp);
@@ -1207,7 +1207,7 @@ bool UserDict::load(const char *file, LemmaIdType start_id) {
 #endif
 
   for (i = 0; i < dict_info.lemma_count; i++) {
-    ids[i] = start_id + i;
+    ids[i] = static_cast<uint32>(start_id + i);
     offsets_by_id[i] = offsets[i];
   }
 
@@ -1341,10 +1341,10 @@ void UserDict::write_back_lemma(int fd) {
   // New lemmas are always appended, no need to write whole lemma block
   size_t need_write = kUserDictPreAlloc *
       (2 + (kUserDictAverageNchar << 2)) - lemma_size_left_;
-  err = lseek(fd, dict_info_.lemma_size - need_write, SEEK_CUR);
+  err = lseek(fd, static_cast<long>(dict_info_.lemma_size - need_write), SEEK_CUR);
   if (err == -1)
     return;
-  write(fd, lemmas_ + dict_info_.lemma_size - need_write, need_write);
+  write(fd, lemmas_ + dict_info_.lemma_size - need_write, static_cast<unsigned int>(need_write));
 
   write(fd, offsets_,  dict_info_.lemma_count << 2);
 #ifdef ___PREDICT_ENABLED___
@@ -1569,7 +1569,7 @@ void UserDict::defragment(void) {
     // Swap ids_
     LemmaIdType tmpid = ids_[first_inuse];
     ids_[first_inuse] = ids_[first_freed];
-    ids_[first_freed] = tmpid;
+    ids_[first_freed] = static_cast<uint32>(tmpid);
     // Go on
     first_freed++;
   }
@@ -1602,17 +1602,17 @@ void UserDict::defragment(void) {
     first_freed++;
   }
 #endif
-  dict_info_.lemma_count = first_freed;
+  dict_info_.lemma_count = static_cast<uint32>(first_freed);
   // Fixup lemmas_
   size_t begin = 0;
   size_t end = 0;
   size_t dst = 0;
-  int total_size = dict_info_.lemma_size + lemma_size_left_;
-  int total_count = dict_info_.lemma_count + lemma_count_left_;
+  int total_size = static_cast<int>(dict_info_.lemma_size + lemma_size_left_);
+  int total_count = static_cast<int>(dict_info_.lemma_count + lemma_count_left_);
   size_t real_size = total_size - lemma_size_left_;
   while (dst < real_size) {
-    unsigned char flag = get_lemma_flag(dst);
-    unsigned char nchr = get_lemma_nchar(dst);
+    unsigned char flag = get_lemma_flag(static_cast<uint32>(dst));
+    unsigned char nchr = get_lemma_nchar(static_cast<uint32>(dst));
     if ((flag & kUserDictLemmaFlagRemove) == 0) {
       dst += nchr * 4 + 2;
       continue;
@@ -1624,21 +1624,21 @@ void UserDict::defragment(void) {
 
   end = dst;
   while (end < real_size) {
-    begin = end + get_lemma_nchar(end) * 4 + 2;
+    begin = end + get_lemma_nchar(static_cast<uint32>(end)) * 4 + 2;
  repeat:
     // not used any more
     if (begin >= real_size)
       break;
-    unsigned char flag = get_lemma_flag(begin);
-    unsigned char nchr = get_lemma_nchar(begin);
+    unsigned char flag = get_lemma_flag(static_cast<uint32>(begin));
+    unsigned char nchr = get_lemma_nchar(static_cast<uint32>(begin));
     if (flag & kUserDictLemmaFlagRemove) {
       begin += nchr * 4 + 2;
       goto repeat;
     }
     end = begin + nchr * 4 + 2;
     while (end < real_size) {
-      unsigned char eflag = get_lemma_flag(end);
-      unsigned char enchr = get_lemma_nchar(end);
+      unsigned char eflag = get_lemma_flag(static_cast<uint32>(end));
+      unsigned char enchr = get_lemma_nchar(static_cast<uint32>(end));
       if ((eflag & kUserDictLemmaFlagRemove) == 0) {
         end += enchr * 4 + 2;
         continue;
@@ -1648,19 +1648,19 @@ void UserDict::defragment(void) {
     memmove(lemmas_ + dst, lemmas_ + begin, end - begin);
     for (size_t j = 0; j < dict_info_.lemma_count; j++) {
       if (offsets_[j] >= begin && offsets_[j] < end) {
-        offsets_[j] -= (begin - dst);
+        offsets_[j] -= static_cast<uint32>(begin - dst);
         offsets_by_id_[ids_[j] - start_id_] = offsets_[j];
       }
 #ifdef ___PREDICT_ENABLED___
       if (predicts_[j] >= begin && predicts_[j] < end) {
-        predicts_[j] -= (begin - dst);
+        predicts_[j] -= static_cast<uint32>(begin - dst);
       }
 #endif
     }
 #ifdef ___SYNC_ENABLED___
     for (size_t j = 0; j < dict_info_.sync_count; j++) {
       if (syncs_[j] >= begin && syncs_[j] < end) {
-        syncs_[j] -= (begin - dst);
+        syncs_[j] -= static_cast<uint32>(begin - dst);
       }
     }
 #endif
@@ -1669,7 +1669,7 @@ void UserDict::defragment(void) {
 
   dict_info_.free_count = 0;
   dict_info_.free_size = 0;
-  dict_info_.lemma_size = dst;
+  dict_info_.lemma_size = static_cast<uint32>(dst);
   lemma_size_left_ = total_size - dict_info_.lemma_size;
   lemma_count_left_ = total_count - dict_info_.lemma_count;
 
@@ -1684,7 +1684,7 @@ void UserDict::defragment(void) {
   // XXX If write-back is invoked immediately after
   // this defragment, no need to fix up following in-mem data.
   for (uint32 i = 0; i < dict_info_.lemma_count; i++) {
-    ids_[i] = start_id_ + i;
+    ids_[i] = static_cast<uint32>(start_id_ + i);
     offsets_by_id_[i] = offsets_[i];
   }
 
@@ -1775,13 +1775,13 @@ int UserDict::put_lemmas_no_sync_from_utf16le_string(char16 * lemmas, int len) {
     splid_len++;
     if (p - ptr == len)
       break;
-    py16_len = p - py16;
+    py16_len = static_cast<int>(p - py16);
     if (kMaxLemmaSize < splid_len) {
       break;
     }
     bool is_pre;
     int splidl = spl_parser->splstr16_to_idxs_f(
-        py16, py16_len, splid, NULL, kMaxLemmaSize, is_pre);
+        py16, static_cast<uint16>(py16_len), splid, NULL, kMaxLemmaSize, is_pre);
     if (splidl != splid_len)
       break;
     // Phrase
@@ -1789,7 +1789,7 @@ int UserDict::put_lemmas_no_sync_from_utf16le_string(char16 * lemmas, int len) {
     while (*p != 0x2c && (p - ptr) < len) {
       p++;
     }
-    hz16_len = p - hz16;
+    hz16_len = static_cast<int>(p - hz16);
     if (hz16_len != splid_len)
       break;
     // Frequency
@@ -1798,7 +1798,7 @@ int UserDict::put_lemmas_no_sync_from_utf16le_string(char16 * lemmas, int len) {
     while (*p != 0x2c && (p - ptr) < len) {
       p++;
     }
-    fr16_len = p - fr16;
+    fr16_len = static_cast<int>(p - fr16);
     uint32 intf = (uint32)utf16le_atoll(fr16, fr16_len);
     // Last modified time
     fr16 = ++p;
@@ -1806,10 +1806,11 @@ int UserDict::put_lemmas_no_sync_from_utf16le_string(char16 * lemmas, int len) {
     while (*p != 0x3b && (p - ptr) < len) {
       p++;
     }
-    fr16_len = p - fr16;
+    fr16_len = static_cast<int>(p - fr16);
     uint64 last_mod = utf16le_atoll(fr16, fr16_len);
 
-    put_lemma_no_sync(hz16, splid, splid_len, intf, last_mod);
+    put_lemma_no_sync(hz16, splid, static_cast<uint16>(splid_len),
+      static_cast<uint16>(intf), last_mod);
     newly_added++;
 
     p++;
@@ -1843,7 +1844,7 @@ int UserDict::get_sync_lemmas_in_utf16le_string_from_beginning(
     uint32 nchar = get_lemma_nchar(offset);
     uint16 *spl = get_lemma_spell_ids(offset);
     uint16 *wrd = get_lemma_word(offset);
-    int score = _get_lemma_score(wrd, spl, nchar);
+    int score = _get_lemma_score(wrd, spl, static_cast<uint16>(nchar));
 
     static char score_temp[32], *pscore_temp = score_temp;
     static char16 temp[256], *ptemp = temp;
@@ -1854,8 +1855,8 @@ int UserDict::get_sync_lemmas_in_utf16le_string_from_beginning(
     uint32 j;
     // Add pinyin
     for (j = 0; j < nchar; j++) {
-      int ret_len = spl_trie->get_spelling_str16(
-          spl[j], ptemp, temp + sizeof(temp) - ptemp);
+      int ret_len = static_cast<int>(spl_trie->get_spelling_str16(
+          spl[j], ptemp, temp + sizeof(temp) - ptemp));
       if (ret_len <= 0)
         break;
       ptemp += ret_len;
@@ -1893,7 +1894,7 @@ int UserDict::get_sync_lemmas_in_utf16le_string_from_beginning(
     }
     // Add frequency
     uint32 intf = extract_score_freq(score);
-    int ret_len = utf16le_lltoa(intf, ptemp, temp + sizeof(temp) - ptemp);
+    int ret_len = utf16le_lltoa(intf, ptemp, static_cast<int>(temp + sizeof(temp) - ptemp));
     if (ret_len <= 0)
       continue;
     ptemp += ret_len;
@@ -1904,7 +1905,7 @@ int UserDict::get_sync_lemmas_in_utf16le_string_from_beginning(
     }
     // Add last modified time
     uint64 last_mod = extract_score_lmt(score);
-    ret_len = utf16le_lltoa(last_mod, ptemp, temp + sizeof(temp) - ptemp);
+    ret_len = utf16le_lltoa(last_mod, ptemp, static_cast<int>(temp + sizeof(temp) - ptemp));
     if (ret_len <= 0)
       continue;
     ptemp += ret_len;
@@ -1915,7 +1916,7 @@ int UserDict::get_sync_lemmas_in_utf16le_string_from_beginning(
     }
 
     // Write to string
-    int need_len = ptemp - temp;
+    int need_len = static_cast<int>(ptemp - temp);
     if (need_len > left_len)
       break;
     memcpy(str + len, temp, need_len * 2);
@@ -2120,7 +2121,6 @@ LemmaIdType UserDict::_put_lemma(char16 lemma_str[], uint16 splids[],
 #endif
     return id;
   }
-  return 0;
 }
 
 #ifdef ___SYNC_ENABLED___
@@ -2160,7 +2160,7 @@ LemmaIdType UserDict::update_lemma(LemmaIdType lemma_id, int16 delta_count,
     uint64 lmt = extract_score_lmt(score);
     if (count + delta_count > kUserDictMaxFrequency ||
         count + delta_count < count) {
-      delta_count = kUserDictMaxFrequency - count;
+      delta_count = static_cast<int16>(kUserDictMaxFrequency - count);
     }
     count += delta_count;
     dict_info_.total_nfreq += delta_count;
@@ -2187,7 +2187,7 @@ size_t UserDict::get_total_lemma_count() {
 }
 
 void UserDict::set_total_lemma_count_of_others(size_t count) {
-  total_other_nfreq_ = count;
+  total_other_nfreq_ = static_cast<uint32>(count);
 }
 
 LemmaIdType UserDict::append_a_lemma(char16 lemma_str[], uint16 splids[],
@@ -2205,14 +2205,14 @@ LemmaIdType UserDict::append_a_lemma(char16 lemma_str[], uint16 splids[],
         = lemma_str[i];
   }
   uint32 off = dict_info_.lemma_count;
-  offsets_[off] = offset;
+  offsets_[off] = static_cast<uint32>(offset);
   scores_[off] = build_score(lmt, count);
-  ids_[off] = id;
+  ids_[off] = static_cast<uint32>(id);
 #ifdef ___PREDICT_ENABLED___
-  predicts_[off] = offset;
+  predicts_[off] = static_cast<uint32>(offset);
 #endif
 
-  offsets_by_id_[id - start_id_] = offset;
+  offsets_by_id_[id - start_id_] = static_cast<uint32>(offset);
 
   dict_info_.lemma_count++;
   dict_info_.lemma_size += (2 + (lemma_len << 2));
@@ -2227,10 +2227,10 @@ LemmaIdType UserDict::append_a_lemma(char16 lemma_str[], uint16 splids[],
   size_t i = 0;
   while (i < off) {
     offset = offsets_[i];
-    uint32 nchar = get_lemma_nchar(offset);
-    uint16 * spl = get_lemma_spell_ids(offset);
+    uint32 nchar = get_lemma_nchar(static_cast<uint32>(offset));
+    uint16 * spl = get_lemma_spell_ids(static_cast<uint32>(offset));
 
-    if (0 <= fuzzy_compare_spell_id(spl, nchar, &searchable))
+    if (0 <= fuzzy_compare_spell_id(spl, static_cast<uint16>(nchar), &searchable))
       break;
     i++;
   }

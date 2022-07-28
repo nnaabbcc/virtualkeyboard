@@ -157,7 +157,7 @@ class UserDict : public AtomDictBase {
   // Inuse lemmas' offset
   uint32 * offsets_;
   // Highest bit in offset tells whether corresponding lemma is removed
-  static const uint32 kUserDictOffsetFlagRemove = (1 << 31);
+  static const uint32 kUserDictOffsetFlagRemove = (1u << 31);
   // Maximum possible for the offset
   static const uint32 kUserDictOffsetMask = ~(kUserDictOffsetFlagRemove);
   // Bit width for last modified time, from 1 to 16

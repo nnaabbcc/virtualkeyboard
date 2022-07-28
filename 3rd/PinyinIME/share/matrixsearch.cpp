@@ -265,9 +265,9 @@ bool MatrixSearch::reset_search(size_t ch_pos, bool clear_fixed_this_step,
     }
 
     if (NULL != dict_handles_to_clear) {
-      dict_trie_->reset_milestones(ch_pos, dict_handles_to_clear[0]);
+      dict_trie_->reset_milestones(static_cast<uint16>(ch_pos), dict_handles_to_clear[0]);
       if (NULL != user_dict_)
-        user_dict_->reset_milestones(ch_pos, dict_handles_to_clear[1]);
+        user_dict_->reset_milestones(static_cast<uint16>(ch_pos), dict_handles_to_clear[1]);
     }
 
     pys_decoded_len_ = ch_pos;
@@ -316,26 +316,26 @@ bool MatrixSearch::reset_search(size_t ch_pos, bool clear_fixed_this_step,
       // which was previously fixed.
       //
       // Prepare mile stones of this step to clear.
-      MileStoneHandle *dict_handles_to_clear = NULL;
+      MileStoneHandle *dict_handles_to_clear_2 = NULL;
       if (clear_dmi_this_step && ch_pos == fixed_ch_pos &&
           matrix_[fixed_ch_pos].dmi_num > 0) {
-        dict_handles_to_clear = dmi_pool_[matrix_[fixed_ch_pos].dmi_pos].dict_handles;
+        dict_handles_to_clear_2 = dmi_pool_[matrix_[fixed_ch_pos].dmi_pos].dict_handles;
       }
 
       // If there are more steps, and this step is not allowed to clear, find
       // milestones of next step.
       if (pys_decoded_len_ > fixed_ch_pos && !clear_dmi_this_step) {
-        dict_handles_to_clear = NULL;
+        dict_handles_to_clear_2 = NULL;
         if (matrix_[fixed_ch_pos + 1].dmi_num > 0) {
-          dict_handles_to_clear =
+          dict_handles_to_clear_2 =
               dmi_pool_[matrix_[fixed_ch_pos + 1].dmi_pos].dict_handles;
         }
       }
 
-      if (NULL != dict_handles_to_clear) {
-        dict_trie_->reset_milestones(fixed_ch_pos, dict_handles_to_clear[0]);
+      if (NULL != dict_handles_to_clear_2) {
+        dict_trie_->reset_milestones(static_cast<uint16>(fixed_ch_pos), dict_handles_to_clear_2[0]);
         if (NULL != user_dict_)
-          user_dict_->reset_milestones(fixed_ch_pos, dict_handles_to_clear[1]);
+          user_dict_->reset_milestones(static_cast<uint16>(fixed_ch_pos), dict_handles_to_clear_2[1]);
       }
 
 
@@ -359,7 +359,7 @@ bool MatrixSearch::reset_search(size_t ch_pos, bool clear_fixed_this_step,
                              + matrix_[fixed_ch_pos].mtrx_nd_num;
       }
 
-      for (uint16 re_pos = fixed_ch_pos; re_pos < ch_pos; re_pos++) {
+      for (uint16 re_pos = static_cast<uint16>(fixed_ch_pos); re_pos < ch_pos; re_pos++) {
         add_char(pys_[re_pos]);
       }
     } else if (fixed_hzs_ > 0 && kLemmaIdComposing == lma_id_[0]) {
@@ -399,7 +399,7 @@ bool MatrixSearch::reset_search(size_t ch_pos, bool clear_fixed_this_step,
       fixed_lmas_ = 1;
       fixed_lmas_no1_[0] = 0;  // A composing string is always modified.
       fixed_hzs_ = c_phrase_.length;
-      lma_start_[1] = fixed_hzs_;
+      lma_start_[1] = static_cast<uint16>(fixed_hzs_);
       lma_id_[0] = kLemmaIdComposing;
       matrix_[spl_start_[fixed_hzs_]].mtrx_nd_fixed = mtrx_nd_pool_ +
           matrix_[spl_start_[fixed_hzs_]].mtrx_nd_pos;
@@ -570,7 +570,7 @@ size_t MatrixSearch::delsearch(size_t pos, bool is_pos_in_splid,
     fixed_lmas_ = 1;
     fixed_lmas_no1_[0] = 0;  // A composing string is always modified.
     fixed_hzs_ = c_phrase_.length;
-    lma_start_[1] = fixed_hzs_;
+    lma_start_[1] = static_cast<uint16>(fixed_hzs_);
     lma_id_[0] = kLemmaIdComposing;
     matrix_[spl_start_[fixed_hzs_]].mtrx_nd_fixed = mtrx_nd_pool_ +
         matrix_[spl_start_[fixed_hzs_]].mtrx_nd_pos;
@@ -650,7 +650,7 @@ void MatrixSearch::update_dict_freq() {
 }
 
 bool MatrixSearch::add_lma_to_userdict(uint16 lma_fr, uint16 lma_to,
-                                       float score) {
+                                       float /*score*/) {
   if (lma_to - lma_fr <= 1 || NULL == user_dict_)
     return false;
 
@@ -847,7 +847,8 @@ size_t MatrixSearch::choose(size_t cand_id) {
   lpi_item.id = id_chosen;
 
   PoolPosType step_to_dmi_fr = match_dmi(step_to,
-                                         spl_id_ + fixed_hzs_, cand_len);
+                                         spl_id_ + fixed_hzs_,
+                                         static_cast<uint16>(cand_len));
   assert(step_to_dmi_fr != static_cast<PoolPosType>(-1));
 
   extend_mtrx_nd(matrix_[step_fr].mtrx_nd_fixed, &lpi_item, 1,
@@ -862,7 +863,7 @@ size_t MatrixSearch::choose(size_t cand_id) {
   else
     fixed_lmas_no1_[fixed_lmas_] = 0;
   lma_id_[fixed_lmas_] = id_chosen;
-  lma_start_[fixed_lmas_ + 1] = lma_start_[fixed_lmas_] + cand_len;
+  lma_start_[fixed_lmas_ + 1] = static_cast<uint16>(lma_start_[fixed_lmas_] + cand_len);
   fixed_lmas_++;
   fixed_hzs_ = fixed_hzs_ + cand_len;
 
@@ -948,7 +949,7 @@ bool MatrixSearch::is_split_at(uint16 pos) {
 
 void MatrixSearch::fill_dmi(DictMatchInfo *dmi, MileStoneHandle *handles,
                             PoolPosType dmi_fr, uint16 spl_id,
-                            uint16 node_num, unsigned char dict_level,
+                            uint16 /*node_num*/, unsigned char dict_level,
                             bool splid_end_split, unsigned char splstr_len,
                             unsigned char all_full_id) {
   dmi->dict_handles[0] = handles[0];
@@ -991,7 +992,7 @@ bool MatrixSearch::add_char_qwerty() {
         break;
     }
 
-    uint16 oldrow = pys_decoded_len_ - ext_len;
+    uint16 oldrow = static_cast<uint16>(pys_decoded_len_ - ext_len);
 
     // 0. If that row is before the last fixed step, ignore.
     if (spl_start_[fixed_hzs_] > oldrow)
@@ -1084,7 +1085,7 @@ bool MatrixSearch::add_char_qwerty() {
 
       uint16 new_dmi_num;
 
-      new_dmi_num = extend_dmi(dep_, dmi);
+      new_dmi_num = static_cast<uint16>(extend_dmi(dep_, dmi));
 
       if (new_dmi_num > 0) {
         if (dmi_c_phrase_) {
@@ -1132,7 +1133,7 @@ void MatrixSearch::prepare_candidates() {
   // Get candiates from the first un-fixed step.
   uint16 lma_size_max = kMaxLemmaSize;
   if (lma_size_max > spl_id_num_ - fixed_hzs_)
-    lma_size_max = spl_id_num_ - fixed_hzs_;
+    lma_size_max = static_cast<uint16>(spl_id_num_ - fixed_hzs_);
 
   uint16 lma_size = lma_size_max;
 
@@ -1177,14 +1178,14 @@ void MatrixSearch::prepare_candidates() {
   if (kPrintDebug0) {
     printf("-----Prepare candidates, score:\n");
     for (size_t a = 0; a < lpi_total_; a++) {
-      printf("[%03d]%d    ", a, lpi_items_[a].psb);
+      printf("[%03zu]%d    ", a, lpi_items_[a].psb);
       if ((a + 1) % 6 == 0) printf("\n");
     }
     printf("\n");
   }
 
   if (kPrintDebug0) {
-    printf("--- lpi_total_ = %d\n", lpi_total_);
+    printf("--- lpi_total_ = %zu\n", lpi_total_);
   }
 }
 
@@ -1227,7 +1228,7 @@ void MatrixSearch::merge_fixed_lmas(size_t del_spl_pos) {
       bp = 0;
     }
 
-    uint16 sub_num = c_phrase_.sublma_num;
+    uint16 sub_num = static_cast<uint16>(c_phrase_.sublma_num);
     for (uint16 pos = bp; pos <= fixed_lmas_; pos++) {
       c_phrase_.sublma_start[sub_num + pos - bp] = lma_start_[pos];
       if (lma_start_[pos] > del_spl_pos) {
@@ -1333,7 +1334,7 @@ void MatrixSearch::get_spl_start_id() {
     }
 
     // Update the lemma segmentation information
-    lma_start_[lma_id_num_ + 1] = spl_id_num_;
+    lma_start_[lma_id_num_ + 1] = static_cast<uint16>(spl_id_num_);
     lma_id_[lma_id_num_] = mtrx_nd->id;
     lma_id_num_++;
 
@@ -1451,7 +1452,7 @@ size_t MatrixSearch::extend_dmi(DictExtPara *dep, DictMatchInfo *dmi_s) {
     if (handles[1] > 0) {
       if (kPrintDebug0) {
         for (size_t t = 0; t < lpi_num; t++) {
-          printf("--Extend in user dict: uid:%d uscore:%d\n", lpi_items_[lpi_total_ + t].id,
+          printf("--Extend in user dict: uid:%zu uscore:%d\n", lpi_items_[lpi_total_ + t].id,
                  lpi_items_[lpi_total_ + t].psb);
         }
       }
@@ -1466,13 +1467,13 @@ size_t MatrixSearch::extend_dmi(DictExtPara *dep, DictMatchInfo *dmi_s) {
     if (NULL == dmi_s) {
       fill_dmi(dmi_add, handles,
                (PoolPosType)-1, splid,
-               1, 1, dep->splid_end_split, dep->ext_len,
+               1, 1, dep->splid_end_split, static_cast<unsigned char>(dep->ext_len),
                spl_trie_->is_half_id(splid) ? 0 : 1);
     } else {
       fill_dmi(dmi_add, handles,
-               dmi_s - dmi_pool_, splid, 1,
+               dmi_s->dmi_fr - dmi_pool_->dmi_fr, splid, 1,
                dmi_s->dict_level + 1, dep->splid_end_split,
-               dmi_s->splstr_len + dep->ext_len,
+               static_cast<unsigned char>(dmi_s->splstr_len + dep->ext_len),
                spl_trie_->is_half_id(splid) ? 0 : dmi_s->all_full_id);
     }
 
@@ -1484,7 +1485,7 @@ size_t MatrixSearch::extend_dmi(DictExtPara *dep, DictMatchInfo *dmi_s) {
       return ret_val;
 
     if (kPrintDebug0) {
-      printf("--- lpi_total_ = %d\n", lpi_total_);
+      printf("--- lpi_total_ = %zu\n", lpi_total_);
     }
 
     myqsort(lpi_items_, lpi_total_, sizeof(LmaPsbItem), cmp_lpi_with_psb);
@@ -1513,13 +1514,13 @@ size_t MatrixSearch::extend_dmi_c(DictExtPara *dep, DictMatchInfo *dmi_s) {
     if (NULL == dmi_s)
       fill_dmi(dmi_add, handles,
                (PoolPosType)-1, splid,
-               1, 1, dep->splid_end_split, dep->ext_len,
+               1, 1, dep->splid_end_split, static_cast<unsigned char>(dep->ext_len),
                spl_trie_->is_half_id(splid) ? 0 : 1);
     else
       fill_dmi(dmi_add, handles,
-               dmi_s - dmi_pool_, splid, 1,
+               dmi_s->dmi_fr - dmi_pool_->dmi_fr, splid, 1,
                dmi_s->dict_level + 1, dep->splid_end_split,
-               dmi_s->splstr_len + dep->ext_len,
+               static_cast<unsigned char>(dmi_s->splstr_len + dep->ext_len),
                spl_trie_->is_half_id(splid) ? 0 : dmi_s->all_full_id);
 
     if (pos == c_phrase_.length - 1) {
@@ -1571,7 +1572,7 @@ size_t MatrixSearch::extend_mtrx_nd(MatrixNode *mtrx_nd, LmaPsbItem lpi_items[],
       mtrx_nd_res->score = score;
       mtrx_nd_res->from = mtrx_nd;
       mtrx_nd_res->dmi_fr = dmi_fr;
-      mtrx_nd_res->step = res_row;
+      mtrx_nd_res->step = static_cast<uint16>(res_row);
       if (matrix_[res_row].mtrx_nd_num < kMaxNodeARow)
         matrix_[res_row].mtrx_nd_num++;
     }
@@ -1633,7 +1634,7 @@ char16* MatrixSearch::get_candidate0(char16 *cand_str, size_t max_len,
     id_num++;
 
     if (kPrintDebug1) {
-       printf("---MatrixNode [step: %d, lma_idx: %d, total score:%.5f]\n",
+       printf("---MatrixNode [step: %d, lma_idx: %zu, total score:%.5f]\n",
               mtrx_nd->step, mtrx_nd->id, mtrx_nd->score);
        debug_print_dmi(mtrx_nd->dmi_fr, 1);
     }
@@ -1668,11 +1669,11 @@ char16* MatrixSearch::get_candidate0(char16 *cand_str, size_t max_len,
 
   if (!only_unfixed) {
     if (NULL != retstr_len)
-      *retstr_len = ret_pos;
+      *retstr_len = static_cast<uint16>(ret_pos);
     cand_str[ret_pos] = (char16)'\0';
   } else {
     if (NULL != retstr_len)
-      *retstr_len = ret_pos - fixed_hzs_;
+      *retstr_len = static_cast<uint16>(ret_pos - fixed_hzs_);
     cand_str[ret_pos - fixed_hzs_] = (char16)'\0';
   }
   return cand_str;
@@ -1684,11 +1685,11 @@ size_t MatrixSearch::get_lpis(const uint16* splid_str, size_t splid_str_len,
   if (splid_str_len > kMaxLemmaSize)
     return 0;
 
-  size_t num1 = dict_trie_->get_lpis(splid_str, splid_str_len,
+  size_t num1 = dict_trie_->get_lpis(splid_str, static_cast<uint16>(splid_str_len),
                                      lma_buf, max_lma_buf);
   size_t num2 = 0;
   if (NULL != user_dict_) {
-    num2 = user_dict_->get_lpis(splid_str, splid_str_len,
+    num2 = user_dict_->get_lpis(splid_str, static_cast<uint16>(splid_str_len),
                          lma_buf + num1, max_lma_buf - num1);
   }
 
@@ -1863,7 +1864,7 @@ size_t MatrixSearch::inner_predict(const char16 *fixed_buf, uint16 fixed_len,
       // dictionary.
       bool nearest_n_word = false;
       for (size_t nlen = 2; nlen <= fixed_len; nlen++) {
-        if (dict_trie_->get_lemma_id(fixed_buf + fixed_len - nlen, nlen) > 0) {
+        if (dict_trie_->get_lemma_id(fixed_buf + fixed_len - nlen, static_cast<uint16>(nlen)) > 0) {
           nearest_n_word = true;
           break;
         }
@@ -1879,14 +1880,14 @@ size_t MatrixSearch::inner_predict(const char16 *fixed_buf, uint16 fixed_len,
     res_this = 0;
     if (!kOnlyUserDictPredict) {
       res_this =
-          dict_trie_->predict(fixed_buf + fixed_len - len, len,
+          dict_trie_->predict(fixed_buf + fixed_len - len, static_cast<uint16>(len),
                               npre_items_ + res_total, this_max,
                               res_total);
     }
 
     if (NULL != user_dict_) {
       res_this = res_this +
-                 user_dict_->predict(fixed_buf + fixed_len - len, len,
+                 user_dict_->predict(fixed_buf + fixed_len - len, static_cast<uint16>(len),
                                      npre_items_ + res_total + res_this,
                                      this_max - res_this, res_total + res_this);
     }
@@ -1952,7 +1953,10 @@ size_t MatrixSearch::get_predicts(const char16 fixed_buf[],
   if (0 ==fixed_len || fixed_len > kMaxPredictSize || 0 == buf_len)
     return 0;
 
-  return inner_predict(fixed_buf, fixed_len, predict_buf, buf_len);
+  return inner_predict(fixed_buf,
+    static_cast<uint16>(fixed_len),
+    predict_buf,
+    buf_len);
 }
 
 }  // namespace ime_pinyin
